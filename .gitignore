@@ -103,3 +103,4 @@ ENV/
 # additional excludes
 .idea/*
 flowers/*
+checkpoints/*
