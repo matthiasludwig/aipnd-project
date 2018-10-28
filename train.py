@@ -4,6 +4,7 @@ from train_load import *
 from network import Network
 
 # Define the argparse to read out the arguments from the command line
+# flowers --save_dir checkpoints --arch "vgg16" --learning_rate 0.01 --hidden_units 512 --epochs 1 --gpu
 parser = argparse.ArgumentParser(description="Argument Parser for prediction")
 
 parser.add_argument(action='store',
