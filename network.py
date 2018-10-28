@@ -41,3 +41,93 @@ class Network:
 			('softmax', nn.LogSoftmax(dim=1))
 		]))
 		self.model.classifier = classifier
+
+	def validation(self, validloader):
+		valid_loss = 0
+		accuracy = 0
+
+		for inputs, labels in validloader:
+			inputs, labels = inputs.to(self.device), labels.to(self.device)
+
+			output = self.model.forward(inputs)
+			valid_loss = self.criterion(output, labels).item()
+
+			ps = torch.exp(output)
+			equality = (labels.data == ps.max(dim=1)[1])
+			accuracy += equality.type(torch.FloatTensor).mean()
+
+		return valid_loss, accuracy
+
+	def train(self, trainloader, validloader):
+		steps = 0
+		print_every = 50
+
+		self.model.to(self.device)
+
+		for e in range(self.epochs):
+			running_loss = 0
+			for inputs, labels in trainloader:
+				steps += 1
+
+				inputs, labels = inputs.to(self.device), labels.to(self.device)
+
+				self.optimizer.zero_grad()
+
+				outputs = self.model.forward(inputs)
+				loss = self.criterion(outputs, labels)
+				loss.backward()
+				self.optimizer.step()
+
+				running_loss += loss.item()
+
+				if steps % print_every == 0:
+					# Put model in eval mode
+					self.model.eval()
+
+					with torch.no_grad():
+						valid_loss, accuracy = self.validation(validloader)
+
+					print("Epoch: {}/{}.. ".format(e + 1, self.epochs),
+					      "Training Loss: {:.3f}.. ".format(running_loss / print_every),
+					      "Valid Loss: {:.3f}.. ".format(valid_loss / len(validloader)),
+					      "Valid Accuracy: {:.3f}".format(accuracy / len(validloader)))
+
+					running_loss = 0
+
+					self.model.train()
+
+	def test(self, testloader):
+		# Do validation on the test set
+		test_loss = 0
+		accuracy = 0
+
+		self.model.eval()
+
+		with torch.no_grad():
+			for inputs, labels in testloader:
+				inputs, labels = inputs.to(self.device), labels.to(self.device)
+
+				output = self.model.forward(inputs)
+				test_loss = self.criterion(output, labels).item()
+
+				ps = torch.exp(output)
+				equality = (labels.data == ps.max(dim=1)[1])
+				accuracy += equality.type(torch.FloatTensor).mean()
+
+		print("Test-Loss: {}\n".format(test_loss / len(testloader)),
+		      "Test-Accuracy: {}".format(accuracy / len(testloader)))
+
+	def save(self, save_dir):
+		# Save the checkpoint
+		save_loc = save_dir + 'checkpoint.pth'
+
+		checkpoint = {
+			'input_size': self.model.classifier[0].in_features,
+			# 'batch_size': trainloader.batch_size,  #TODO
+			'state_dict': self.model.classifier.state_dict(),
+			# 'class_to_idx': train_data.class_to_idx,  # TODO
+			'output_size': 102,
+			'classifier': self.model.classifier
+		}
+
+		torch.save(checkpoint, save_loc)

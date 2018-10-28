@@ -22,16 +22,19 @@ parser.add_argument('--save_dir', action='store',
 
 parser.add_argument('--learning_rate', action='store',
                     default=0.001,
+					type=float,
                     dest='learning_rate',
                     help='Defines the learning rate')
 
 parser.add_argument('--hidden_units', action='store',
                     default=512,
+					type=int,
                     dest='hidden_units',
                     help='Defines the hidden units for the network')
 
 parser.add_argument('--epochs', action='store',
                     default=10,
+                    type=int,
                     dest='epochs',
                     help='Defines the epochs for training the network')
 
@@ -54,5 +57,17 @@ trainloader, validloader, testloader = load_data(command_line_inputs.directory)
 # Load categories
 cat_to_name = load_categories()
 
-network = Network(input_size, command_line_inputs.hidden_units, command_line_inputs.learning_rate, arch, command_line_inputs.epochs, command_line_inputs.gpu)
-network.test()
+network = Network(input_size, command_line_inputs.hidden_units, command_line_inputs.learning_rate, arch,
+                  command_line_inputs.epochs, command_line_inputs.gpu)
+
+print("Building Model...")
+network.build_model()
+print("Start Training...")
+network.train(trainloader, validloader)
+print("Finished Training".center(80, '-'))
+print("Start Testing...")
+network.test(testloader)
+print("Finished Testing".center(80, '-'))
+print("Saving Network to", command_line_inputs.save_dir)
+network.save(command_line_inputs.save_dir)
+print("Finished Saving".center(80, '-'))
