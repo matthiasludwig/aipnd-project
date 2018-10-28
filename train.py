@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser(description="Argument Parser for prediction")
 
 parser.add_argument(action='store',
                     dest='directory',
-                    help='Stores the data directory for training')
+                    help='Defines the data directory for training data')
 
 parser.add_argument('--arch', action='store',
                     default='vgg16',
@@ -37,7 +37,7 @@ parser.add_argument('--epochs', action='store',
 
 parser.add_argument('--gpu', action='store_true',
                     default=False,
-                    dest='use_gpu',
+                    dest='gpu',
                     help='Use gpu for inference')
 
 command_line_inputs = parser.parse_args()
@@ -46,7 +46,7 @@ if command_line_inputs.arch in AVAILABLEMODELS:
 	input_size = AVAILABLEMODELS[command_line_inputs.arch]
 	arch = command_line_inputs.arch
 else:
-	raise ValueError("Specified arch is not available")
+	raise Exception("Specified arch is not available")
 
 # Use load_data to create generator objects for training, validation and testing
 trainloader, validloader, testloader = load_data(command_line_inputs.directory)
@@ -54,4 +54,5 @@ trainloader, validloader, testloader = load_data(command_line_inputs.directory)
 # Load categories
 cat_to_name = load_categories()
 
-network = Network(input_size, command_line_inputs.hidden_units, command_line_inputs.learning_rate, arch)
+network = Network(input_size, command_line_inputs.hidden_units, command_line_inputs.learning_rate, arch, command_line_inputs.epochs, command_line_inputs.gpu)
+network.test()

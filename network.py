@@ -1,89 +1,43 @@
 import torch
-from torch import nn
+from torch import nn, optim
 from torchvision import models
+from collections import OrderedDict
 import torch.nn.functional as F
 
 
-class Network(nn.Module):
-	def __init__(self, model, hidden_layers, drop_p=0.5):
-		super().__init__()
-		# Input to a hidden layer
-		self.hidden_layers = nn.ModuleList([nn.Linear(input_size, hidden_layers[0])])
-		# Add a variable number of more hidden layers
-		layer_sizes = zip(hidden_layers[:-1], hidden_layers[1:])
-		self.hidden_layers.extend([nn.Linear(h1, h2) for h1, h2 in layer_sizes])
-		self.output = nn.Linear(hidden_layers[-1], output_size)
-		self.dropout = nn.Dropout(p=drop_p)
+class Network:
+	def __init__(self, input_size, hidden_units, lr, arch, epochs, gpu):
+		# Initialize all values passed to the object
+		self.input_size = input_size
+		self.hidden_units = hidden_units
+		self.learning_rate = lr
+		if arch == 'vgg16':
+			self.model = models.vgg16(pretrained=True)
+		elif arch == 'alexnet':
+			self.model = models.alexnet(pretrained=True)
+		elif arch == 'densenet161':
+			self.model = models.densenet161(pretrained=True)
+		self.epochs = epochs
+		self.gpu = gpu
+		self.criterion = nn.NLLLoss()
+		self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=0.001)
 
-	def forward(self, x):
-		''' Forward pass through the network, returns the output logits '''
+		# Check if gpu should be used
+		if self.gpu:
+			self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')  # If gpu used, check for cuda
+		else:
+			self.device = 'cpu'
 
-		for each in self.hidden_layers:
-			x = F.relu(each(x))
-			x = self.dropout(x)
-		x = self.output(x)
+	def build_model(self):
+		# Substitute the model's classifier
+		for param in self.model.parameters():
+			param.requires_grad = False
 
-		return F.log_softmax(x, dim=1)
-
-
-def validation(model, testloader, criterion):
-	accuracy = 0
-	test_loss = 0
-	for images, labels in testloader:
-		images = images.resize_(images.size()[0], 784)
-
-		output = model.forward(images)
-		test_loss += criterion(output, labels).item()
-
-		## Calculating the accuracy
-		# Model's output is log-softmax, take exponential to get the probabilities
-		ps = torch.exp(output)
-		# Class with highest probability is our predicted class, compare with true label
-		equality = (labels.data == ps.max(1)[1])
-		# Accuracy is number of correct predictions divided by all predictions, just take the mean
-		accuracy += equality.type_as(torch.FloatTensor()).mean()
-
-	return test_loss, accuracy
-
-
-def train(model, trainloader, testloader, criterion, optimizer, epochs=5, print_every=40):
-	steps = 0
-	running_loss = 0
-	for e in range(epochs):
-		# Model in training mode, dropout is on
-		model.train()
-		for images, labels in trainloader:
-			steps += 1
-
-			# Flatten images into a 784 long vector
-			images.resize_(images.size()[0], 784)
-
-			optimizer.zero_grad()
-
-			output = model.forward(images)
-			loss = criterion(output, labels)
-			loss.backward()
-			optimizer.step()
-
-			running_loss += loss.item()
-
-			if steps % print_every == 0:
-				# Model in inference mode, dropout is off
-				model.eval()
-
-				# Turn off gradients for validation, will speed up inference
-				with torch.no_grad():
-					test_loss, accuracy = validation(model, testloader, criterion)
-
-				print("Epoch: {}/{}.. ".format(e + 1, epochs),
-				      "Training Loss: {:.3f}.. ".format(running_loss / print_every),
-				      "Test Loss: {:.3f}.. ".format(test_loss / len(testloader)),
-				      "Test Accuracy: {:.3f}".format(accuracy / len(testloader)))
-
-				running_loss = 0
-
-			# Make sure dropout and grads are on for training
-
-
-			model.train()
-
+		classifier = nn.Sequential(OrderedDict([
+			('fc1', nn.Linear(self.input_size, self.hidden_units)),
+			('relu1', nn.ReLU()),
+			('dropout1', nn.Dropout(0.5)),
+			('fc4', nn.Linear(self.hidden_units, 102)),
+			('softmax', nn.LogSoftmax(dim=1))
+		]))
+		self.model.classifier = classifier
