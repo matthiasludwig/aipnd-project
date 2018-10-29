@@ -28,3 +28,6 @@ parser.add_argument('--gpu', action='store_true',
 
 command_line_inputs = parser.parse_args()
 
+network = Network()
+network.load(command_line_inputs.checkpoint)
+print(network)

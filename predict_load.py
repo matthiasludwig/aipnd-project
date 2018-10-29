@@ -28,19 +28,3 @@ def process_image(image):
 	np_image = np_image.transpose((2, 0, 1))
 
 	return np_image
-
-
-def load_checkpoint(filepath):
-	checkpoint = torch.load(filepath)
-
-	# Restoring Model with model.classifier
-	model = Network(checkpoint['input_size'], checkpoint['hidden_units'], )
-	classifier = checkpoint['classifier']
-	model.classifier = classifier
-	# Restoring model.classifier.state_dict()
-	model.classifier.load_state_dict(checkpoint['state_dict'])
-
-	return model, checkpoint['class_to_idx']
-
-
-#model, class_to_idx = load_checkpoint('checkpoints/checkpoint.pth')

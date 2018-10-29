@@ -12,12 +12,12 @@ def load_data(directory):
 	test_dir = directory + '/test'
 
 	train_transforms = transforms.Compose([transforms.Resize(224),
-	                                       transforms.RandomRotation(30),
-	                                       transforms.RandomResizedCrop(224),
-	                                       transforms.RandomHorizontalFlip(),
-	                                       transforms.ToTensor(),
-	                                       transforms.Normalize([0.485, 0.456, 0.406],
-	                                                            [0.229, 0.224, 0.225])])
+						transforms.RandomRotation(30),
+						transforms.RandomResizedCrop(224),
+						transforms.RandomHorizontalFlip(),
+						transforms.ToTensor(),
+						transforms.Normalize([0.485, 0.456, 0.406],
+											[0.229, 0.224, 0.225])])
 	valid_transforms = transforms.Compose([transforms.Resize(256),
 	                                       transforms.CenterCrop(224),
 	                                       transforms.ToTensor(),
@@ -39,7 +39,7 @@ def load_data(directory):
 	validloader = torch.utils.data.DataLoader(valid_data, batch_size=64, shuffle=False)
 	testloader = torch.utils.data.DataLoader(test_data, batch_size=64, shuffle=False)
 
-	return trainloader, validloader, testloader
+	return trainloader, validloader, testloader, train_data.class_to_idx, trainloader.batch_size
 
 
 def load_categories(path='cat_to_name.json'):

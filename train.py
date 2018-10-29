@@ -4,7 +4,6 @@ from train_load import *
 from network import Network
 
 # Define the argparse to read out the arguments from the command line
-# flowers --save_dir checkpoints --arch "vgg16" --learning_rate 0.01 --hidden_units 512 --epochs 1 --gpu
 parser = argparse.ArgumentParser(description="Argument Parser for prediction")
 
 parser.add_argument(action='store',
@@ -14,7 +13,7 @@ parser.add_argument(action='store',
 parser.add_argument('--arch', action='store',
                     default='vgg16',
                     dest='arch',
-                    help='Defines the architecture for training')  # TODO: Input possible values
+                    help='Defines the architecture for training')
 
 parser.add_argument('--save_dir', action='store',
                     default='checkpoints/',
@@ -23,13 +22,13 @@ parser.add_argument('--save_dir', action='store',
 
 parser.add_argument('--learning_rate', action='store',
                     default=0.001,
-					type=float,
+                    type=float,
                     dest='learning_rate',
                     help='Defines the learning rate')
 
 parser.add_argument('--hidden_units', action='store',
                     default=512,
-					type=int,
+                    type=int,
                     dest='hidden_units',
                     help='Defines the hidden units for the network')
 
@@ -53,13 +52,13 @@ else:
 	raise Exception("Specified arch is not available")
 
 # Use load_data to create generator objects for training, validation and testing
-trainloader, validloader, testloader = load_data(command_line_inputs.directory)
+trainloader, validloader, testloader, class_to_idx, batch_size = load_data(command_line_inputs.directory)
 
 # Load categories
 cat_to_name = load_categories()
 
 network = Network(input_size, command_line_inputs.hidden_units, command_line_inputs.learning_rate, arch,
-                  command_line_inputs.epochs, command_line_inputs.gpu)
+				command_line_inputs.epochs, command_line_inputs.gpu)
 
 print("Building Model...")
 network.build_model()
@@ -70,5 +69,5 @@ print("Start Testing...")
 network.test(testloader)
 print("Finished Testing".center(80, '-'))
 print("Saving Network to", command_line_inputs.save_dir)
-network.save(command_line_inputs.save_dir)
+network.save(command_line_inputs.save_dir, class_to_idx, batch_size)
 print("Finished Saving".center(80, '-'))

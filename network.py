@@ -14,26 +14,27 @@ class Network:
 		self.input_size = input_size
 		self.hidden_units = hidden_units
 		self.learning_rate = lr
-		if arch == 'vgg16':
+		self.arch = arch
+		if self.arch == 'vgg16':
 			self.model = models.vgg16(pretrained=True)
-			if self.hidden_units != AVAILABLEMODELS['vgg16']:
+			if self.input_size != AVAILABLEMODELS['vgg16']:
 				raise ValueError("self.hidden units is not compatible to chosen architecture!")
-		elif arch == 'alexnet':
+		elif self.arch == 'alexnet':
 			self.model = models.alexnet(pretrained=True)
-			if self.hidden_units != AVAILABLEMODELS['alexnet']:
+			if self.input_size != AVAILABLEMODELS['alexnet']:
 				raise ValueError("self.hidden units is not compatible to chosen architecture!")
-		elif arch == 'densenet161':
+		elif self.arch == 'densenet161':
 			self.model = models.densenet161(pretrained=True)
-			if self.hidden_units != AVAILABLEMODELS['densenet161']:
+			if self.input_size != AVAILABLEMODELS['densenet161']:
 				raise ValueError("self.hidden units is not compatible to chosen architecture!")
 		self.epochs = epochs
 		self.gpu = gpu
 		self.criterion = nn.NLLLoss()
-		self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=0.001)
+		self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.learning_rate)
 
 		# Check if gpu should be used
 		if self.gpu:
-			self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')  # If gpu used, check for cuda
+			self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'gpu')  # If gpu used, check for cuda
 		else:
 			self.device = 'cpu'
 
@@ -97,16 +98,16 @@ class Network:
 						valid_loss, accuracy = self.validation(validloader)
 
 					print("Epoch: {}/{}.. ".format(e + 1, self.epochs),
-					      "Training Loss: {:.3f}.. ".format(running_loss / print_every),
-					      "Valid Loss: {:.3f}.. ".format(valid_loss / len(validloader)),
-					      "Valid Accuracy: {:.3f}".format(accuracy / len(validloader)))
+											"Training Loss: {:.3f}.. ".format(running_loss / print_every),
+											"Valid Loss: {:.3f}.. ".format(valid_loss / len(validloader)),
+											"Valid Accuracy: {:.3f}".format(accuracy / len(validloader)))
 
 					running_loss = 0
 
 					self.model.train()
 
 	def test(self, testloader):
-		# Do validation on the test set
+		# Do test on the testloader
 		test_loss = 0
 		accuracy = 0
 
@@ -124,28 +125,44 @@ class Network:
 				accuracy += equality.type(torch.FloatTensor).mean()
 
 		print("Test-Loss: {}\n".format(test_loss / len(testloader)),
-		      "Test-Accuracy: {}".format(accuracy / len(testloader)))
+								"Test-Accuracy: {}".format(accuracy / len(testloader)))
 
-	def save(self, save_dir):
+	def save(self, save_dir, class_to_idx, batch_size):
 		# Save the checkpoint
 		save_loc = save_dir + 'checkpoint.pth'
 
+		print("Saving arch: ", self.arch)
+
 		checkpoint = {
 			'input_size': self.input_size,
-			# 'batch_size': trainloader.batch_size,  #TODO
+			'batch_size': batch_size,
 			'state_dict': self.model.classifier.state_dict(),
-			# 'class_to_idx': train_data.class_to_idx,  # TODO
+			'class_to_idx': class_to_idx,
 			'output_size': 102,
-			'classifier': self.model.classifier
+			'classifier': self.model.classifier,
+			'arch': self.arch
 		}
 
 		torch.save(checkpoint, save_loc)
 
-	# def load(self, save_dir):
+	def load(self, filepath):
+		checkpoint = torch.load(filepath)
+
+		# Restoring Model with model.arch
+		if checkpoint['arch'] == 'vgg16':
+			self.model = models.vgg16(pretrained=True)
+		elif checkpoint['arch'] == 'alexnet':
+			self.model = models.alexnet(pretrained=True)
+		elif checkpoint['arch'] == 'densenet161':
+			self.model = models.densenet161(pretrained=True)
+		self.model.classifier = checkpoint['classifier']
+
+		# Restoring model.classifier.state_dict()
+		self.model.classifier.load_state_dict(checkpoint['state_dict'])
 
 	def predict(self, image_path, topk):
-		''' Predict the class (or classes) of an image using a trained deep learning model.
-		'''
+		# Predict the class (or classes) of an image using a trained deep learning model.
+
 		# Inverting class_to_idx. Adapted from: https://stackoverflow.com/questions/483666/python-reverse-invert-a-mapping
 		idx_to_class = {v: k for k, v in class_to_idx.items()}  # TODO Has to be part of the object
 
