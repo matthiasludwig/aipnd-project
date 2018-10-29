@@ -54,14 +54,13 @@ else:
 # Use load_data to create generator objects for training, validation and testing
 trainloader, validloader, testloader, class_to_idx, batch_size = load_data(command_line_inputs.directory)
 
-# Load categories
-cat_to_name = load_categories()
-
+# Build Network
 network = Network(input_size, command_line_inputs.hidden_units, command_line_inputs.learning_rate, arch,
 				command_line_inputs.epochs, command_line_inputs.gpu)
 
-print("Building Model...")
+print("Building Model...", end='')
 network.build_model()
+print(" done")
 print("Start Training...")
 network.train(trainloader, validloader)
 print("Finished Training".center(80, '-'))
