@@ -135,8 +135,6 @@ class Network:
 		# Save the checkpoint
 		save_loc = save_dir + 'checkpoint.pth'
 
-		print("Saving arch: ", self.arch)
-
 		checkpoint = {
 			'input_size': self.input_size,
 			'batch_size': batch_size,
