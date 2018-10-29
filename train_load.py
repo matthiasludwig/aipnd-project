@@ -1,4 +1,3 @@
-import json
 import torch
 from torchvision import transforms, datasets
 
@@ -40,11 +39,3 @@ def load_data(directory):
 	testloader = torch.utils.data.DataLoader(test_data, batch_size=64, shuffle=False)
 
 	return trainloader, validloader, testloader, train_data.class_to_idx, trainloader.batch_size
-
-
-def load_categories(path='cat_to_name.json'):
-	cat_to_name = None
-	with open(path, 'r') as f:
-		cat_to_name = json.load(f)
-
-	return cat_to_name

@@ -1,11 +1,11 @@
 import numpy as np
+import json
 from network import *
+from PIL import Image
 
 
 def process_image(image):
-	''' Scales, crops, and normalizes a PIL image for a PyTorch model,
-		returns an Numpy array
-	'''
+	#Scales, crops, and normalizes a PIL image for a PyTorch model, returns an Numpy array
 	# Scales the picture to 256, 256 via PIL.resize
 	pil_image = Image.open(image)
 	pil_image = pil_image.resize((256, 256))
@@ -28,3 +28,11 @@ def process_image(image):
 	np_image = np_image.transpose((2, 0, 1))
 
 	return np_image
+
+
+def load_categories(path='cat_to_name.json'):
+	cat_to_name = None
+	with open(path, 'r') as f:
+		cat_to_name = json.load(f)
+
+	return cat_to_name
