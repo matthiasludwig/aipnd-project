@@ -35,4 +35,4 @@ network.load(command_line_inputs.checkpoint, command_line_inputs.gpu)
 cat_to_name = load_categories(command_line_inputs.category_names)
 # Output result
 for i, j in zip(classes, probabilities):
-	print("{} = {}%".format(cat_to_name[i], j*100))
+	print("{} = {:.2f}%".format(cat_to_name[i], j*100))

@@ -109,8 +109,6 @@ class Network:
 
 					running_loss = 0
 
-					print(self.model.state_dict())
-
 					self.model.train()
 
 	def test(self, testloader):
