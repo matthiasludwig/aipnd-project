@@ -32,7 +32,7 @@ class Network:
 		self.gpu = gpu
 		self.class_to_idx = None
 		self.criterion = nn.NLLLoss()
-		self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.learning_rate)
+		self.optimizer = None
 
 		# Check if gpu should be used
 		if self.gpu:
@@ -53,6 +53,7 @@ class Network:
 			('softmax', nn.LogSoftmax(dim=1))
 		]))
 		self.model.classifier = classifier
+		self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.learning_rate)
 
 	def validation(self, validloader):
 		valid_loss = 0
@@ -107,6 +108,8 @@ class Network:
 											"Valid Accuracy: {:.3f}".format(accuracy / len(validloader)))
 
 					running_loss = 0
+
+					print(self.model.state_dict())
 
 					self.model.train()
 
