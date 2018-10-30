@@ -19,15 +19,15 @@ class Network:
 		if self.arch == 'vgg16':
 			self.model = models.vgg16(pretrained=True)
 			if self.input_size != AVAILABLEMODELS['vgg16']:
-				raise ValueError("self.hidden units is not compatible to chosen architecture!")
+				raise ValueError("self.input units is not compatible to chosen architecture!")
 		elif self.arch == 'alexnet':
 			self.model = models.alexnet(pretrained=True)
 			if self.input_size != AVAILABLEMODELS['alexnet']:
-				raise ValueError("self.hidden units is not compatible to chosen architecture!")
+				raise ValueError("self.input units is not compatible to chosen architecture!")
 		elif self.arch == 'densenet161':
 			self.model = models.densenet161(pretrained=True)
 			if self.input_size != AVAILABLEMODELS['densenet161']:
-				raise ValueError("self.hidden units is not compatible to chosen architecture!")
+				raise ValueError("self.input units is not compatible to chosen architecture!")
 		self.epochs = epochs
 		self.gpu = gpu
 		self.class_to_idx = None
@@ -36,7 +36,7 @@ class Network:
 
 		# Check if gpu should be used
 		if self.gpu:
-			self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'gpu')  # If gpu used, check for cuda
+			self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')  # If gpu used, check for cuda
 		else:
 			self.device = 'cpu'
 
@@ -49,7 +49,7 @@ class Network:
 			('fc1', nn.Linear(self.input_size, self.hidden_units)),
 			('relu1', nn.ReLU()),
 			('dropout1', nn.Dropout(0.5)),
-			('fc4', nn.Linear(self.hidden_units, 102)),
+			('fc2', nn.Linear(self.hidden_units, 102)),
 			('softmax', nn.LogSoftmax(dim=1))
 		]))
 		self.model.classifier = classifier
@@ -80,6 +80,8 @@ class Network:
 			running_loss = 0
 			for inputs, labels in trainloader:
 				steps += 1
+
+				self.model.train()  # To ensure that the model in in train mode
 
 				inputs, labels = inputs.to(self.device), labels.to(self.device)
 
@@ -133,8 +135,6 @@ class Network:
 		# Save the checkpoint
 		save_loc = save_dir + 'checkpoint.pth'
 
-		print("Saving arch: ", self.arch)
-
 		checkpoint = {
 			'input_size': self.input_size,
 			'batch_size': batch_size,
@@ -170,7 +170,7 @@ class Network:
 		idx_to_class = {v: k for k, v in self.class_to_idx.items()}
 		# Check if gpu should be used
 		if self.gpu:
-			self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'gpu')  # If gpu used, check for cuda
+			self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')  # If gpu used, check for cuda
 		else:
 			self.device = 'cpu'
 		# Predict image with preprocessing
