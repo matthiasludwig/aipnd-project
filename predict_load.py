@@ -5,7 +5,7 @@ from PIL import Image
 
 
 def process_image(image):
-	#Scales, crops, and normalizes a PIL image for a PyTorch model, returns an Numpy array
+	# Scales, crops, and normalizes a PIL image for a PyTorch model, returns an Numpy array
 	# Scales the picture to 256, 256 via PIL.resize
 	pil_image = Image.open(image)
 	pil_image = pil_image.resize((256, 256))

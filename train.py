@@ -56,7 +56,7 @@ trainloader, validloader, testloader, class_to_idx, batch_size = load_data(comma
 
 # Build Network
 network = Network(input_size, command_line_inputs.hidden_units, command_line_inputs.learning_rate, arch,
-																		command_line_inputs.epochs, command_line_inputs.gpu)
+                  command_line_inputs.epochs, command_line_inputs.gpu)
 
 print("Building Model...", end='')
 network.build_model()
